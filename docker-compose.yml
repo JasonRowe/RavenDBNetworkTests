@@ -1,0 +1,63 @@
+version: '3.8'
+services:
+  mytoxiproxy:
+    image: shopify/toxiproxy
+    ports:
+      - 8474:8474
+      - 7071:7071
+      - 7072:7072
+      - 7073:7073
+    expose:
+      - 6061
+      - 6062
+      - 6063
+  raven1:
+    build: ./RavenDB
+    container_name: raven1
+    ports:
+      - 8081:8080
+      - 38881:38888
+    environment:
+      - RAVEN_ARGS=--Setup.Mode=None
+      - RAVEN_Logs_Mode=Information
+      - RAVEN_Security_UnsecuredAccessAllowed=PublicNetwork
+      - RAVEN_PublicServerUrl=http://mytoxiproxy:7071
+      - RAVEN_PublicServerUrl_Tcp=tcp://mytoxiproxy:6061
+      - RAVEN_License_Eula_Accepted=true
+    env_file: ./license.env
+      
+  raven2:
+    build: ./RavenDB
+    container_name: raven2
+    ports:
+      - 8082:8080
+      - 38882:38888
+    environment:
+      - RAVEN_ARGS=--Setup.Mode=None
+      - RAVEN_Security_UnsecuredAccessAllowed=PublicNetwork
+      - RAVEN_PublicServerUrl=http://mytoxiproxy:7072
+      - RAVEN_PublicServerUrl_Tcp=tcp://mytoxiproxy:6062
+      - RAVEN_License_Eula_Accepted=true
+    env_file: ./license.env
+   
+  raven3:
+    build: ./RavenDB
+    container_name: raven3
+    ports:
+      - 8083:8080
+      - 38883:38888
+    environment:
+      - RAVEN_ARGS=--Setup.Mode=None
+      - RAVEN_Security_UnsecuredAccessAllowed=PublicNetwork
+      - RAVEN_PublicServerUrl=http://mytoxiproxy:7073
+      - RAVEN_PublicServerUrl_Tcp=tcp://mytoxiproxy:6063
+      - RAVEN_License_Eula_Accepted=true
+    env_file: ./license.env
+  toxiproxy-doconfig:
+    build: 
+      context: ./ToxiProxyConfig
+    depends_on:
+      - mytoxiproxy
+      - raven1
+      - raven2
+      - raven3
